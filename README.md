@@ -5,6 +5,7 @@ A cross-platform movie discovery app built with Expo + React Native, designed to
 ## Tech Stack
 
 ### Frontend
+
 - `Expo` (`~54`)
 - `React Native` (`0.81`) + `React` (`19`)
 - `Expo Router` (file-based routing)
@@ -13,23 +14,24 @@ A cross-platform movie discovery app built with Expo + React Native, designed to
 - `react-native-web` for browser support
 
 ### Backend and Data
+
 - `TMDB API` for movie catalog, search, and movie details
 - `Appwrite` for trending/search analytics storage
 - Local saved movies state via React Context
-   - Web persistence with `localStorage`
-   - In-memory fallback on native
+  - Web persistence with `localStorage`
+  - In-memory fallback on native
 
 ## Core Features
 
 - Home feed with:
-   - Trending movies (from Appwrite)
-   - Latest movies (from TMDB popular endpoint)
+  - Trending movies (from Appwrite)
+  - Latest movies (from TMDB popular endpoint)
 - Search with debounce and result tracking
 - Movie details modal with:
-   - Poster image
-   - Title
-   - Description (overview)
-   - Rating and vote count
+  - Poster image
+  - Title
+  - Description (overview)
+  - Rating and vote count
 - Save/unsave movie flow from modal
 - Saved movies tab with responsive grid
 - Profile tab UI
@@ -71,6 +73,7 @@ constants/
 ## Architecture Overview
 
 ### Frontend Flow
+
 - UI renders movie lists via `MovieCard` and `TrendingCard`.
 - Tapping a card opens `MovieModal`.
 - `MovieModal` fetches full movie details via `fetchMovieDetails(movieId)`.
@@ -80,19 +83,21 @@ constants/
 ### Backend Flow
 
 #### TMDB (`services/api.ts`)
+
 - `fetchMovies({ query, page })`
-   - `query` present: `search/movie`
-   - no query: `movie/popular`
+  - `query` present: `search/movie`
+  - no query: `movie/popular`
 - `fetchMovieDetails(movieId)`
-   - fetches detailed data for modal/details pages
+  - fetches detailed data for modal/details pages
 
 #### Appwrite (`services/appwrite.ts`)
+
 - `pingAppwrite()`
-   - calls `GET {ENDPOINT}/health` to validate connectivity
+  - calls `GET {ENDPOINT}/health` to validate connectivity
 - `updateSearchCount(query, movie)`
-   - updates existing search term count or inserts new document
+  - updates existing search term count or inserts new document
 - `getTrendingMovies()`
-   - fetches and returns top movies by search count
+  - fetches and returns top movies by search count
 
 ## Environment Variables
 
@@ -109,6 +114,7 @@ EXPO_PUBLIC_APPWRITE_COLLECTION_ID=your_collection_id
 ```
 
 Notes:
+
 - `DATABASE_ID` and `COLLECTION_ID` are required for trending/search analytics.
 - All vars are exposed with `EXPO_PUBLIC_` prefix because they are used client-side.
 
@@ -123,6 +129,7 @@ The analytics collection used by `updateSearchCount`/`getTrendingMovies` needs f
 - `poster_url` (string)
 
 Recommended index:
+
 - index on `count` (descending sort support)
 
 ## Installation and Run
@@ -160,25 +167,25 @@ npm run lint
 ## Current Persistence Behavior
 
 - Saved movies:
-   - Web: persisted to `localStorage`
-   - Native: memory only (resets on app restart)
+  - Web: persisted to `localStorage`
+  - Native: memory only (resets on app restart)
 
 If you want native persistence, add `AsyncStorage` in `SavedMoviesContext`.
 
 ## Troubleshooting
 
 - Appwrite ping fails:
-   - verify `EXPO_PUBLIC_APPWRITE_ENDPOINT`
-   - verify project ID
-   - check network/firewall
+  - verify `EXPO_PUBLIC_APPWRITE_ENDPOINT`
+  - verify project ID
+  - check network/firewall
 
 - Trending list empty:
-   - verify `DATABASE_ID` and `COLLECTION_ID`
-   - verify collection schema fields
-   - ensure permissions allow reads/writes
+  - verify `DATABASE_ID` and `COLLECTION_ID`
+  - verify collection schema fields
+  - ensure permissions allow reads/writes
 
 - TMDB requests fail:
-   - verify `EXPO_PUBLIC_MOVIE_API_KEY` bearer token
+  - verify `EXPO_PUBLIC_MOVIE_API_KEY` bearer token
 
 ## License
 
