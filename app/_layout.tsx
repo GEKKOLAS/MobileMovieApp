@@ -1,10 +1,17 @@
+import { SavedMoviesProvider } from "@/context/SavedMoviesContext";
+import { pingAppwrite } from "@/services/appwrite";
 import { Stack } from "expo-router";
+import { useEffect } from "react";
 import { StatusBar } from "react-native";
 import "./globals.css";
 
 export default function RootLayout() {
+  useEffect(() => {
+    pingAppwrite();
+  }, []);
+
   return (
-    <>
+    <SavedMoviesProvider>
       <StatusBar hidden={true} />
 
       <Stack>
@@ -21,6 +28,6 @@ export default function RootLayout() {
           }}
         />
       </Stack>
-    </>
+    </SavedMoviesProvider>
   );
 }

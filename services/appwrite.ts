@@ -11,6 +11,27 @@ const client = new Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID);
 
 const databases = new Databases(client);
 
+/**
+ * Pings the Appwrite server to verify connectivity and credentials.
+ * Logs the result to the console — call this once on app startup to diagnose issues.
+ */
+export const pingAppwrite = async (): Promise<boolean> => {
+  try {
+    const res = await fetch(`${ENDPOINT}/health`, {
+      headers: { "x-appwrite-project": PROJECT_ID },
+    });
+    if (res.ok) {
+      console.log("[Appwrite] ✅ Connected —", ENDPOINT);
+      return true;
+    }
+    console.warn("[Appwrite] ⚠️ Responded with status:", res.status);
+    return false;
+  } catch (err) {
+    console.error("[Appwrite] ❌ Unreachable:", err);
+    return false;
+  }
+};
+
 export const updateSearchCount = async (query: string, movie: Movie) => {
   try {
     // List existing documents by search term
