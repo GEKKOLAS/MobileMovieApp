@@ -1,50 +1,185 @@
-# Welcome to your Expo app 👋
+# MobileMovieApp
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A cross-platform movie discovery app built with Expo + React Native, designed to run on iOS, Android, and Web from a single codebase.
 
-## Get started
+## Tech Stack
 
-1. Install dependencies
+### Frontend
+- `Expo` (`~54`)
+- `React Native` (`0.81`) + `React` (`19`)
+- `Expo Router` (file-based routing)
+- `NativeWind` + `TailwindCSS` for styling
+- `react-native-safe-area-context` for safe areas
+- `react-native-web` for browser support
 
-   ```bash
-   npm install
-   ```
+### Backend and Data
+- `TMDB API` for movie catalog, search, and movie details
+- `Appwrite` for trending/search analytics storage
+- Local saved movies state via React Context
+   - Web persistence with `localStorage`
+   - In-memory fallback on native
 
-2. Start the app
+## Core Features
 
-   ```bash
-   npx expo start
-   ```
+- Home feed with:
+   - Trending movies (from Appwrite)
+   - Latest movies (from TMDB popular endpoint)
+- Search with debounce and result tracking
+- Movie details modal with:
+   - Poster image
+   - Title
+   - Description (overview)
+   - Rating and vote count
+- Save/unsave movie flow from modal
+- Saved movies tab with responsive grid
+- Profile tab UI
+- Web-specific layout optimizations (responsive columns, centered containers, virtualized list tuning)
 
-In the output, you'll find options to open the app in a
+## Project Structure
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+```text
+app/
+   _layout.tsx              # Root stack + providers
+   search.tsx               # Standalone search route
+   (tabs)/
+      _layout.tsx            # Tab layout/navigation styles
+      index.tsx              # Home tab
+      search.tsx             # Search tab
+      save.tsx               # Saved movies tab
+      profile.tsx            # Profile tab
+   movie/[id].tsx           # Legacy full details screen
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+components/
+   MovieCard.tsx
+   TrendingCard.tsx
+   SearchBar.tsx
+   MovieModal.tsx           # Details modal + save button
 
-## Get a fresh project
+context/
+   SavedMoviesContext.tsx   # Saved movie state/persistence
 
-When you're ready, run:
+services/
+   api.ts                   # TMDB integration
+   appwrite.ts              # Appwrite integration + ping helper
+   usefetch.ts              # Reusable fetch hook
 
-```bash
-npm run reset-project
+constants/
+   icons.ts
+   images.ts
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Architecture Overview
 
-## Learn more
+### Frontend Flow
+- UI renders movie lists via `MovieCard` and `TrendingCard`.
+- Tapping a card opens `MovieModal`.
+- `MovieModal` fetches full movie details via `fetchMovieDetails(movieId)`.
+- Save button in modal uses `SavedMoviesContext.toggleSave()`.
+- `Save` tab consumes `SavedMoviesContext.saved` and renders saved movies.
 
-To learn more about developing your project with Expo, look at the following resources:
+### Backend Flow
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+#### TMDB (`services/api.ts`)
+- `fetchMovies({ query, page })`
+   - `query` present: `search/movie`
+   - no query: `movie/popular`
+- `fetchMovieDetails(movieId)`
+   - fetches detailed data for modal/details pages
 
-## Join the community
+#### Appwrite (`services/appwrite.ts`)
+- `pingAppwrite()`
+   - calls `GET {ENDPOINT}/health` to validate connectivity
+- `updateSearchCount(query, movie)`
+   - updates existing search term count or inserts new document
+- `getTrendingMovies()`
+   - fetches and returns top movies by search count
 
-Join our community of developers creating universal apps.
+## Environment Variables
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Create `.env` at project root:
+
+```env
+EXPO_PUBLIC_MOVIE_API_KEY=your_tmdb_bearer_token
+
+EXPO_PUBLIC_APPWRITE_ENDPOINT=https://<region>.cloud.appwrite.io/v1
+EXPO_PUBLIC_APPWRITE_PROJECT_ID=your_project_id
+EXPO_PUBLIC_APPWRITE_PROJECT_NAME=your_project_name
+EXPO_PUBLIC_APPWRITE_DATABASE_ID=your_database_id
+EXPO_PUBLIC_APPWRITE_COLLECTION_ID=your_collection_id
+```
+
+Notes:
+- `DATABASE_ID` and `COLLECTION_ID` are required for trending/search analytics.
+- All vars are exposed with `EXPO_PUBLIC_` prefix because they are used client-side.
+
+## Appwrite Collection Schema
+
+The analytics collection used by `updateSearchCount`/`getTrendingMovies` needs fields:
+
+- `searchTerm` (string)
+- `movie_id` (number)
+- `title` (string)
+- `count` (number)
+- `poster_url` (string)
+
+Recommended index:
+- index on `count` (descending sort support)
+
+## Installation and Run
+
+```bash
+npm install
+```
+
+```bash
+npm run start
+```
+
+Platform shortcuts:
+
+```bash
+npm run android
+npm run ios
+npm run web
+```
+
+Lint:
+
+```bash
+npm run lint
+```
+
+## Useful Scripts
+
+- `npm run start` - Start Expo dev server
+- `npm run web` - Start web build locally
+- `npm run android` - Open Android target
+- `npm run ios` - Open iOS target
+- `npm run lint` - Lint project with Expo ESLint config
+
+## Current Persistence Behavior
+
+- Saved movies:
+   - Web: persisted to `localStorage`
+   - Native: memory only (resets on app restart)
+
+If you want native persistence, add `AsyncStorage` in `SavedMoviesContext`.
+
+## Troubleshooting
+
+- Appwrite ping fails:
+   - verify `EXPO_PUBLIC_APPWRITE_ENDPOINT`
+   - verify project ID
+   - check network/firewall
+
+- Trending list empty:
+   - verify `DATABASE_ID` and `COLLECTION_ID`
+   - verify collection schema fields
+   - ensure permissions allow reads/writes
+
+- TMDB requests fail:
+   - verify `EXPO_PUBLIC_MOVIE_API_KEY` bearer token
+
+## License
+
+Private project (set `private: true` in `package.json`).
