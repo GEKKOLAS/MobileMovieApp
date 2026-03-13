@@ -1,11 +1,13 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     ActivityIndicator,
     FlatList,
     Image,
+    Platform,
     Text,
     TouchableOpacity,
+    useWindowDimensions,
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,8 +20,37 @@ import { fetchMovies } from "@/services/api";
 const Search = () => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === "web";
+
+  const searchColumns = isWeb
+    ? width >= 1400
+      ? 6
+      : width >= 1180
+        ? 5
+        : width >= 920
+          ? 4
+          : width >= 640
+            ? 3
+            : 2
+    : 3;
+
+  useEffect(() => {
+    if (!isWeb) {
+      setDebouncedQuery(searchQuery);
+      return;
+    }
+
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery, isWeb]);
+
+  useEffect(() => {
+    handleSearch(debouncedQuery);
+  }, [debouncedQuery]);
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
@@ -40,7 +71,18 @@ const Search = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-primary">
-      <View className="px-5 pt-5">
+      <View
+        className="px-5 pt-5"
+        style={
+          isWeb
+            ? {
+                width: "100%",
+                maxWidth: 1360,
+                alignSelf: "center",
+              }
+            : undefined
+        }
+      >
         {/* Back button */}
         <TouchableOpacity
           onPress={() => router.back()}
@@ -60,7 +102,9 @@ const Search = () => {
           value={searchQuery}
           onChangeText={(text) => {
             setSearchQuery(text);
-            handleSearch(text);
+            if (!isWeb) {
+              handleSearch(text);
+            }
           }}
         />
 
@@ -74,18 +118,39 @@ const Search = () => {
                 Search Results ({searchResults.length})
               </Text>
               <FlatList
+                key={`search-page-${searchColumns}`}
                 data={searchResults}
                 renderItem={({ item }) => <MovieCard {...item} />}
                 keyExtractor={(item) => item.id.toString()}
-                numColumns={3}
-                columnWrapperStyle={{ gap: 8 }}
-                contentContainerStyle={{ gap: 8 }}
+                numColumns={searchColumns}
+                initialNumToRender={isWeb ? 18 : 9}
+                maxToRenderPerBatch={isWeb ? 24 : 12}
+                windowSize={isWeb ? 10 : 7}
+                updateCellsBatchingPeriod={16}
+                removeClippedSubviews
+                columnWrapperStyle={{
+                  gap: isWeb ? 16 : 8,
+                  marginBottom: isWeb ? 12 : 8,
+                }}
+                contentContainerStyle={{
+                  gap: isWeb ? 16 : 8,
+                  paddingBottom: 120,
+                }}
+                style={
+                  isWeb
+                    ? {
+                        width: "100%",
+                        maxWidth: 1360,
+                        alignSelf: "center",
+                      }
+                    : undefined
+                }
                 showsVerticalScrollIndicator={false}
               />
             </>
           ) : searchQuery.trim() ? (
             <Text className="text-gray-400 text-center mt-10">
-              No results found for "{searchQuery}"
+              No results found for: {searchQuery}
             </Text>
           ) : (
             <Text className="text-gray-400 text-center mt-10">

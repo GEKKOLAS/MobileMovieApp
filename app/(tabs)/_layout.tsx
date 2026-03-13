@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Image, ImageBackground, Text, View } from "react-native";
+import { Image, ImageBackground, Platform, Text, View } from "react-native";
 
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
@@ -27,6 +27,8 @@ function TabIcon({ focused, icon, title }: any) {
 }
 
 export default function TabsLayout() {
+  const isWeb = Platform.OS === "web";
+
   return (
     <Tabs
       screenOptions={{
@@ -40,13 +42,16 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: "#0F0D23",
           borderRadius: 50,
-          marginHorizontal: 20,
+          marginHorizontal: isWeb ? 0 : 20,
           marginBottom: 36,
           height: 52,
           position: "absolute",
           overflow: "hidden",
           borderWidth: 1,
           borderColor: "#0F0D23",
+          alignSelf: "center",
+          width: isWeb ? "92%" : undefined,
+          maxWidth: isWeb ? 780 : undefined,
         },
       }}
     >

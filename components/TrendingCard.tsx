@@ -1,6 +1,12 @@
 import { images } from "@/constants/images";
-import { useRouter } from "expo-router";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import {
+    Image,
+    Platform,
+    Text,
+    TouchableOpacity,
+    useWindowDimensions,
+    View,
+} from "react-native";
 
 interface TrendingCardProps {
   movie: TrendingMovie;
@@ -8,7 +14,10 @@ interface TrendingCardProps {
 }
 
 const TrendingCard = ({ movie, index }: TrendingCardProps) => {
-  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === "web";
+  const cardWidth = isWeb ? (width >= 1280 ? 230 : 210) : 192;
+  const cardHeight = isWeb ? (width >= 1280 ? 338 : 310) : 288;
 
   return (
     <TouchableOpacity
@@ -18,7 +27,10 @@ const TrendingCard = ({ movie, index }: TrendingCardProps) => {
         // router.push(`/movie/${movie.movie_id}`);
       }}
     >
-      <View className="relative w-48 h-72">
+      <View
+        className="relative"
+        style={{ width: cardWidth, height: cardHeight }}
+      >
         <Image
           source={{ uri: movie.poster_url }}
           className="w-full h-full rounded-2xl"
@@ -38,11 +50,21 @@ const TrendingCard = ({ movie, index }: TrendingCardProps) => {
         </View>
 
         {/* Movie title overlay */}
-        <View className="absolute bottom-0 left-0 right-0 bg-black/70 p-3 rounded-b-2xl">
-          <Text className="text-white font-bold text-sm" numberOfLines={2}>
+        <View
+          className="absolute bottom-0 left-0 right-0 bg-black/70 rounded-b-2xl"
+          style={{ padding: isWeb ? 12 : 10 }}
+        >
+          <Text
+            className="text-white font-bold text-sm"
+            style={isWeb ? { fontSize: 14 } : undefined}
+            numberOfLines={2}
+          >
             {movie.title}
           </Text>
-          <Text className="text-gray-300 text-xs mt-1">
+          <Text
+            className="text-gray-300 text-xs mt-1"
+            style={isWeb ? { fontSize: 12 } : undefined}
+          >
             {movie.count} searches
           </Text>
         </View>

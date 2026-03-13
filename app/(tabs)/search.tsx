@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Text, View } from "react-native";
+import {
+    ActivityIndicator,
+    FlatList,
+    Image,
+    Platform,
+    Text,
+    useWindowDimensions,
+    View,
+} from "react-native";
 
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
@@ -13,6 +21,20 @@ import SearchBar from "@/components/SearchBar";
 
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === "web";
+
+  const searchColumns = isWeb
+    ? width >= 1400
+      ? 6
+      : width >= 1180
+        ? 5
+        : width >= 920
+          ? 4
+          : width >= 640
+            ? 3
+            : 2
+    : 3;
 
   const {
     data: movies = [],
@@ -42,7 +64,7 @@ const Search = () => {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
+  }, [searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <View className="flex-1 bg-primary">
@@ -54,16 +76,31 @@ const Search = () => {
 
       <FlatList
         className="px-5"
+        style={
+          isWeb
+            ? {
+                width: "100%",
+                maxWidth: 1360,
+                alignSelf: "center",
+              }
+            : undefined
+        }
         data={movies as Movie[]}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => <MovieDisplayCard {...item} />}
-        numColumns={3}
+        key={`search-${searchColumns}`}
+        numColumns={searchColumns}
+        initialNumToRender={isWeb ? 18 : 9}
+        maxToRenderPerBatch={isWeb ? 24 : 12}
+        windowSize={isWeb ? 10 : 7}
+        updateCellsBatchingPeriod={16}
+        removeClippedSubviews
         columnWrapperStyle={{
           justifyContent: "flex-start",
           gap: 16,
           marginVertical: 16,
         }}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: isWeb ? 120 : 100 }}
         ListHeaderComponent={
           <>
             <View className="w-full flex-row justify-center mt-20 items-center">

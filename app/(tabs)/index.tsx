@@ -3,8 +3,10 @@ import {
     ActivityIndicator,
     FlatList,
     Image,
+    Platform,
     ScrollView,
     Text,
+    useWindowDimensions,
     View,
 } from "react-native";
 
@@ -21,6 +23,20 @@ import TrendingCard from "@/components/TrendingCard";
 
 const Index = () => {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === "web";
+
+  const latestMovieColumns = isWeb
+    ? width >= 1400
+      ? 6
+      : width >= 1180
+        ? 5
+        : width >= 920
+          ? 4
+          : width >= 640
+            ? 3
+            : 2
+    : 3;
 
   const {
     data: trendingMovies,
@@ -45,7 +61,16 @@ const Index = () => {
       <ScrollView
         className="flex-1 px-5"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ minHeight: "100%", paddingBottom: 10 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
+        style={
+          isWeb
+            ? {
+                width: "100%",
+                maxWidth: 1360,
+                alignSelf: "center",
+              }
+            : undefined
+        }
       >
         <Image source={icons.logo} className="w-12 h-10 mt-20 mb-5 mx-auto" />
 
@@ -76,9 +101,11 @@ const Index = () => {
                   showsHorizontalScrollIndicator={false}
                   className="mb-4 mt-3"
                   data={trendingMovies}
-                  contentContainerStyle={{
-                    gap: 26,
-                  }}
+                  initialNumToRender={isWeb ? 8 : 5}
+                  maxToRenderPerBatch={isWeb ? 8 : 5}
+                  windowSize={isWeb ? 8 : 5}
+                  removeClippedSubviews
+                  contentContainerStyle={{ gap: isWeb ? 20 : 26 }}
                   renderItem={({ item, index }) => (
                     <TrendingCard movie={item} index={index} />
                   )}
@@ -94,15 +121,21 @@ const Index = () => {
               </Text>
 
               <FlatList
+                key={`latest-${latestMovieColumns}`}
                 data={movies}
                 renderItem={({ item }) => <MovieCard {...item} />}
                 keyExtractor={(item) => item.id.toString()}
-                numColumns={3}
+                numColumns={latestMovieColumns}
+                initialNumToRender={isWeb ? 18 : 9}
+                maxToRenderPerBatch={isWeb ? 24 : 12}
+                windowSize={isWeb ? 10 : 7}
+                updateCellsBatchingPeriod={16}
+                removeClippedSubviews
                 columnWrapperStyle={{
                   justifyContent: "flex-start",
-                  gap: 20,
+                  gap: isWeb ? 16 : 20,
                   paddingRight: 5,
-                  marginBottom: 10,
+                  marginBottom: isWeb ? 14 : 10,
                 }}
                 className="mt-2 pb-32"
                 scrollEnabled={false}
